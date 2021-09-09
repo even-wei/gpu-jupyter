@@ -11,6 +11,7 @@ RUN mamba install --quiet --yes \
     fix-permissions "/home/${NB_USER}"
 
 #  install primehub extension
+ARG PRIMEHUB_EXTENSION_VERSION="0.1.4"
 RUN pip install --no-cache-dir jupyterlab_primehub~=$PRIMEHUB_EXTENSION_VERSION && \
     jupyter serverextension enable jupyterlab_primehub && \
     jupyter labextension install @infuseai/jupyterlab-primehub@~v$PRIMEHUB_EXTENSION_VERSION && \
