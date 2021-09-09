@@ -1,5 +1,4 @@
 # Install Jupyter Notebook, Lab, and Hub
-# Generate a notebook server config
 # Cleanup temporary files
 # Correct permissions
 # Do all this in a single RUN command to avoid duplicating all of the
@@ -10,3 +9,9 @@ RUN mamba install --quiet --yes \
     mamba clean --all -f -y && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
+
+#  install primehub extension
+RUN pip install --no-cache-dir jupyterlab_primehub~=$PRIMEHUB_EXTENSION_VERSION && \
+    jupyter serverextension enable jupyterlab_primehub && \
+    jupyter labextension install @infuseai/jupyterlab-primehub@~v$PRIMEHUB_EXTENSION_VERSION && \
+    jupyter-lab build
