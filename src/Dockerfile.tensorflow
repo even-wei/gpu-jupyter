@@ -2,4 +2,4 @@
 RUN pip install --no-cache-dir --quiet \
         tensorflow==${TENSORFLOW_VERSION} && \
         fix-permissions $CONDA_DIR && \
-        fix-permissions /home/$NB_USER; \
+        fix-permissions /home/$NB_USER
