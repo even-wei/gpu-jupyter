@@ -1,3 +1,5 @@
+USER root
+
 ## Primehub Application Bundles
 RUN apt-get update && apt-get install -yq --no-install-recommends git openssh-server curl htop \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -22,3 +24,5 @@ RUN pip install --no-cache-dir jupyterlab_primehub~=$PRIMEHUB_EXTENSION_VERSION 
     jupyter serverextension enable jupyterlab_primehub && \
     jupyter labextension install @infuseai/jupyterlab-primehub@~v$PRIMEHUB_EXTENSION_VERSION && \
     jupyter-lab build
+
+USER ${NB_UID}
