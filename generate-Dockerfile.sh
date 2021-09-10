@@ -181,14 +181,14 @@ if [[ ! $base_notebook ]]; then
 ############################################################################
 ################# Dependency: jupyter/minimal-notebook #####################
 ############################################################################
-  " >>$DOCKERFILE
+" >>$DOCKERFILE
 	cat $STACKS_DIR/minimal-notebook/Dockerfile | grep -v BASE_CONTAINER >>$DOCKERFILE
 
 	echo "
 ############################################################################
 ################# Dependency: jupyter/scipy-notebook #######################
 ############################################################################
-  " >>$DOCKERFILE
+" >>$DOCKERFILE
 	cat $STACKS_DIR/scipy-notebook/Dockerfile | grep -v BASE_CONTAINER >>$DOCKERFILE
 
 	if [[ $TENSORFLOW ]]; then

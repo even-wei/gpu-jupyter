@@ -10,13 +10,14 @@ RUN apt-get update && apt-get install -yq --no-install-recommends git openssh-se
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
 RUN mamba install --quiet --yes \
-    'mlflow' \
-    'boto3' \
-    'nbreuse' \
-    'tqdm' && \
+    "mlflow" \
+    "boto3" \
+    "tqdm" && \
     mamba clean --all -f -y && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
+
+USER ${NB_UID}
 
 #  install primehub extension
 ARG PRIMEHUB_EXTENSION_VERSION="0.1.4"
@@ -24,5 +25,3 @@ RUN pip install --no-cache-dir jupyterlab_primehub~=$PRIMEHUB_EXTENSION_VERSION 
     jupyter serverextension enable jupyterlab_primehub && \
     jupyter labextension install @infuseai/jupyterlab-primehub@~v$PRIMEHUB_EXTENSION_VERSION && \
     jupyter-lab build
-
-USER ${NB_UID}
