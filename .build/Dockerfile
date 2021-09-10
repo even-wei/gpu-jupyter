@@ -161,15 +161,148 @@ WORKDIR "${HOME}"
 ######################### Dependency: primehub #############################
 ############################################################################
 
-# Install Jupyter Notebook, Lab, and Hub
-# Generate a notebook server config
+## Primehub Application Bundles
+RUN apt-get update && apt-get install -yq --no-install-recommends git openssh-server curl htop \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+#
+# Install MLflow, boto3
 # Cleanup temporary files
 # Correct permissions
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
 RUN mamba install --quiet --yes \
     'mlflow' \
-    'boto3' && \
+    'boto3' \
+    'nbreuse' \
+    'tqdm' && \
+    mamba clean --all -f -y && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+#  install primehub extension
+ARG PRIMEHUB_EXTENSION_VERSION="0.1.4"
+RUN pip install --no-cache-dir jupyterlab_primehub~=$PRIMEHUB_EXTENSION_VERSION && \
+    jupyter serverextension enable jupyterlab_primehub && \
+    jupyter labextension install @infuseai/jupyterlab-primehub@~v$PRIMEHUB_EXTENSION_VERSION && \
+    jupyter-lab build
+
+############################################################################
+################# Dependency: jupyter/minimal-notebook #####################
+############################################################################
+  
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+ARG OWNER=jupyter
+
+LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
+
+USER root
+
+# Install all OS dependencies for fully functional notebook server
+RUN apt-get update --yes && \
+    apt-get install --yes --no-install-recommends \
+    # Common useful utilities
+    git \
+    nano-tiny \
+    tzdata \
+    unzip \
+    vim-tiny \
+    # git-over-ssh
+    openssh-client \
+    # TODO: check if these are needed and describe
+    inkscape \
+    libsm6 \
+    libxext-dev \
+    libxrender1 \
+    lmodern \
+    netcat \
+    # nbconvert dependencies
+    # https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
+    texlive-xetex \
+    texlive-fonts-recommended \
+    texlive-plain-generic && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create alternative for nano -> nano-tiny
+RUN update-alternatives --install /usr/bin/nano nano /bin/nano-tiny 10
+
+# Switch back to jovyan to avoid accidental container runs as root
+USER ${NB_UID}
+
+############################################################################
+################# Dependency: jupyter/scipy-notebook #######################
+############################################################################
+  
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+ARG OWNER=jupyter
+
+LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
+
+USER root
+
+# ffmpeg for matplotlib anim & dvipng+cm-super for latex labels
+RUN apt-get update --yes && \
+    apt-get install --yes --no-install-recommends ffmpeg dvipng cm-super && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+USER ${NB_UID}
+
+# Install Python 3 packages
+RUN mamba install --quiet --yes \
+    'altair' \
+    'beautifulsoup4' \
+    'bokeh' \
+    'bottleneck' \
+    'cloudpickle' \
+    'conda-forge::blas=*=openblas' \
+    'cython' \
+    'dask' \
+    'dill' \
+    'h5py' \
+    'ipympl'\
+    'ipywidgets' \
+    'matplotlib-base' \
+    'numba' \
+    'numexpr' \
+    'pandas' \
+    'patsy' \
+    'protobuf' \
+    'pytables' \
+    'scikit-image' \
+    'scikit-learn' \
+    'scipy' \
+    'seaborn' \
+    'sqlalchemy' \
+    'statsmodels' \
+    'sympy' \
+    'widgetsnbextension'\
+    'xlrd' && \
+    mamba clean --all -f -y && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+# Install facets which does not have a pip or conda package at the moment
+WORKDIR /tmp
+RUN git clone https://github.com/PAIR-code/facets.git && \
+    jupyter nbextension install facets/facets-dist/ --sys-prefix && \
+    rm -rf /tmp/facets && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+# Import matplotlib the first time to build the font cache.
+ENV XDG_CACHE_HOME="/home/${NB_USER}/.cache/"
+
+RUN MPLBACKEND=Agg python -c "import matplotlib.pyplot" && \
+    fix-permissions "/home/${NB_USER}"
+
+USER ${NB_UID}
+
+WORKDIR "${HOME}"
+ARG TENSORFLOW_VERSION=2.6.0
+# Install Tensorflow
+RUN mamba install --quiet --yes \
+    "tensorflow=${TENSORFLOW_VERSION}" && \
     mamba clean --all -f -y && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"

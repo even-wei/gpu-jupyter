@@ -78,6 +78,7 @@ fi
 
 ROOT_CONTAINER="ubuntu:focal"
 if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
+	GPU=1
 	if [[ $TENSORFLOW ]]; then
 		case $TENSORFLOW in
 			"2.6.0" | "2.5.0")
@@ -177,50 +178,22 @@ cat src/Dockerfile.primehub >>$DOCKERFILE
 
 if [[ ! $base_notebook ]]; then
 	echo "
-  ############################################################################
-  ################# Dependency: jupyter/minimal-notebook #####################
-  ############################################################################
+############################################################################
+################# Dependency: jupyter/minimal-notebook #####################
+############################################################################
   " >>$DOCKERFILE
 	cat $STACKS_DIR/minimal-notebook/Dockerfile | grep -v BASE_CONTAINER >>$DOCKERFILE
 
 	echo "
-  ############################################################################
-  ################# Dependency: jupyter/scipy-notebook #######################
-  ############################################################################
+############################################################################
+################# Dependency: jupyter/scipy-notebook #######################
+############################################################################
   " >>$DOCKERFILE
 	cat $STACKS_DIR/scipy-notebook/Dockerfile | grep -v BASE_CONTAINER >>$DOCKERFILE
 
-	# install Julia and R if not excluded or spare mode is used
-	if [[ $no_datascience_notebook != 1 ]]; then
-		echo "
-    ############################################################################
-    ################ Dependency: jupyter/datascience-notebook ##################
-    ############################################################################
-    " >>$DOCKERFILE
-		cat $STACKS_DIR/datascience-notebook/Dockerfile | grep -v BASE_CONTAINER >>$DOCKERFILE
-	else
-		echo "Set 'no-datascience-notebook' = 'python-only', not installing the datascience-notebook with Julia and R."
-	fi
-
-	# Note that the following step also installs the cudatoolkit, which is
-	# essential to access the GPU.
-	echo "
-  ############################################################################
-  ########################## Dependency: gpulibs #############################
-  ############################################################################
-  " >>$DOCKERFILE
-	cat src/Dockerfile.gpulibs >>$DOCKERFILE
-
-	# install useful packages if not excluded or spare mode is used
-	if [[ $no_useful_packages != 1 ]]; then
-		echo "
-    ############################################################################
-    ############################ Useful packages ###############################
-    ############################################################################
-    " >>$DOCKERFILE
-		cat src/Dockerfile.usefulpackages >>$DOCKERFILE
-	else
-		echo "Set 'no-useful-packages', not installing stuff within src/Dockerfile.usefulpackages."
+	if [[ $TENSORFLOW ]]; then
+		echo "ARG TENSORFLOW_VERSION=${TENSORFLOW}" >>$DOCKERFILE
+		cat src/Dockerfile.tensorflow >>$DOCKERFILE
 	fi
 fi
 
