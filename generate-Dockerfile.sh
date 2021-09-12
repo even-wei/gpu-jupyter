@@ -195,6 +195,12 @@ if [[ ! $base_notebook ]]; then
 		echo "ARG TENSORFLOW_VERSION=${TENSORFLOW}" >>$DOCKERFILE
 		cat src/Dockerfile.tensorflow >>$DOCKERFILE
 	fi
+
+	if [[ $PYTORCH ]]; then
+		echo "ARG PYTORCH_VERSION=${PYTORCH}" >>$DOCKERFILE
+		echo "ARG CUDA=${CUDA}" >>$DOCKERFILE
+		cat src/Dockerfile.pytorch >>$DOCKERFILE
+	fi
 fi
 
 # Copy the demo notebooks and change permissions
