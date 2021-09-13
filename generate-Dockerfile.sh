@@ -82,13 +82,16 @@ if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
 	if [[ $TENSORFLOW ]]; then
 		case $TENSORFLOW in
 			"2.6.0" | "2.5.0")
-				REQUIRED_CUDA=11.2
+				REQUIRED_CUDA=("11.2")
 				;;
 			"2.4.0")
-				REQUIRED_CUDA=11.0
+				REQUIRED_CUDA=("11.0")
 				;;
 			"2.3.0" | "2.2.0" | "2.1.0")
-				REQUIRED_CUDA=10.1
+				REQUIRED_CUDA=("10.1")
+				;;
+			"2.0.0" | "1.15.0")
+				REQUIRED_CUDA=("10.0")
 				;;
 			*)
 				echo "TensorFlow $TENSORFLOW is not supported"
@@ -100,13 +103,13 @@ if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
 	if [[ $PYTORCH ]]; then
 		case $PYTORCH in
 			"1.9.0" | "1.8.0")
-				REQUIRED_CUDA=11.1
+				REQUIRED_CUDA=("11.1" "10.2")
 				;;
 			"1.7.1")
-				REQUIRED_CUDA=11.0
+				REQUIRED_CUDA=("11.0" "10.2" "10.1" "9.2")
 				;;
-			"1.7.0" | "1.6.0" | "1.5.1")
-				REQUIRED_CUDA=10.2
+			"1.7.0" | "1.6.0" | "1.5.1" | "1.5.0")
+				REQUIRED_CUDA=("10.2" "10.1" "9.2")
 				;;
 			*)
 				echo "PyTorch $PYTORCH is not supported"
@@ -116,11 +119,14 @@ if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
 	fi
 
 	if [[ $REQUIRED_CUDA ]]; then
-		if [[ $CUDA ]] && [[ $CUDA != "$REQUIRED_CUDA" ]]; then
-			echo "CUDA version unmatched!"
-			exit 0
+		if [[ $CUDA ]]; then
+			if [[ ! " ${REQUIRED_CUDA[*]} " =~ " ${CUDA} " ]]; then
+				echo "CUDA version unmatched!"
+				exit 0
+			fi
+		else
+			CUDA=$REQUIRED_CUDA
 		fi
-		CUDA=$REQUIRED_CUDA
 	fi
 
 	case $CUDA in
@@ -133,8 +139,17 @@ if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
 		"11.0")
 			ROOT_CONTAINER="nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04"
 			;;
+		"10.2")
+			ROOT_CONTAINER="nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04"
+			;;
 		"10.1")
 			ROOT_CONTAINER="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04"
+			;;
+		"10.0")
+			ROOT_CONTAINER="nvidia/cuda:10.0-cudnn7-runtime-ubuntu18.04"
+			;;
+		"9.2")
+			ROOT_CONTAINER="nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04"
 			;;
 		*)
 			echo "CUDA $CUDA is not supported"
