@@ -55,28 +55,11 @@ if [[ $HELP == 1 ]]; then
 	exit 21
 fi
 
-# Clone if docker-stacks doesn't exist, and set to the given commit or the default commit
-ls $STACKS_DIR/README.md >/dev/null 2>&1 || (echo "Docker-stacks was not found, cloning repository" \
-	&& git clone https://github.com/jupyter/docker-stacks.git $STACKS_DIR)
-echo "Set docker-stacks to commit '$HEAD_COMMIT'."
-if [[ $HEAD_COMMIT == "latest" ]]; then
-	echo "WARNING, the latest commit of docker-stacks is used. This may result in version conflicts"
-	cd $STACKS_DIR && git pull && cd -
-else
-	export GOT_HEAD="false"
-	cd $STACKS_DIR && git pull && git reset --hard "$HEAD_COMMIT" >/dev/null 2>&1 && cd - && export GOT_HEAD="true"
-	echo "$HEAD"
-	if [[ $GOT_HEAD == "false" ]]; then
-		echo "Error: The given sha-commit is invalid."
-		echo "Usage: $0 -c [sha-commit] # set the head commit of the docker-stacks submodule (https://github.com/jupyter/docker-stacks/commits/master)."
-		echo "Exiting"
-		exit 2
-	else
-		echo "Set head to given commit."
-	fi
-fi
+UBUNTU_20_04_HEAD_COMMIT="310edebfdcff1ed58444b88fc0f7c513751e30bd"
+UBUNTU_18_04_HEAD_COMMIT="3fe198a1fd4625d833654b1112cb15fade47c2c1"
 
 ROOT_CONTAINER="ubuntu:focal"
+export HEAD_COMMIT=$UBUNTU_20_04_HEAD_COMMIT
 if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
 	GPU=1
 	if [[ $TENSORFLOW ]]; then
@@ -144,30 +127,58 @@ if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
 	case $CUDA in
 		"11.2")
 			ROOT_CONTAINER="nvidia/cuda:11.2.2-cudnn8-runtime-ubuntu20.04"
+			export HEAD_COMMIT=$UBUNTU_20_04_HEAD_COMMIT
 			;;
 		"11.1")
 			ROOT_CONTAINER="nvidia/cuda:11.1.1-cudnn8-runtime-ubuntu20.04"
+			export HEAD_COMMIT=$UBUNTU_20_04_HEAD_COMMIT
 			;;
 		"11.0")
 			ROOT_CONTAINER="nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu20.04"
+			export HEAD_COMMIT=$UBUNTU_20_04_HEAD_COMMIT
 			;;
 		"10.2")
 			ROOT_CONTAINER="nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04"
+			export HEAD_COMMIT=$UBUNTU_18_04_HEAD_COMMIT
 			;;
 		"10.1")
 			ROOT_CONTAINER="nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04"
+			export HEAD_COMMIT=$UBUNTU_18_04_HEAD_COMMIT
 			;;
 		"10.0")
 			ROOT_CONTAINER="nvidia/cuda:10.0-cudnn7-runtime-ubuntu18.04"
+			export HEAD_COMMIT=$UBUNTU_18_04_HEAD_COMMIT
 			;;
 		"9.2")
 			ROOT_CONTAINER="nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04"
+			export HEAD_COMMIT=$UBUNTU_18_04_HEAD_COMMIT
 			;;
 		*)
 			echo "CUDA $CUDA is not supported"
 			exit 0
 			;;
 	esac
+fi
+
+# Clone if docker-stacks doesn't exist, and set to the given commit or the default commit
+ls $STACKS_DIR/README.md >/dev/null 2>&1 || (echo "Docker-stacks was not found, cloning repository" \
+	&& git clone https://github.com/jupyter/docker-stacks.git $STACKS_DIR)
+echo "Set docker-stacks to commit '$HEAD_COMMIT'."
+if [[ $HEAD_COMMIT == "latest" ]]; then
+	echo "WARNING, the latest commit of docker-stacks is used. This may result in version conflicts"
+	cd $STACKS_DIR && git pull && cd -
+else
+	export GOT_HEAD="false"
+	cd $STACKS_DIR && git pull && git reset --hard "$HEAD_COMMIT" >/dev/null 2>&1 && cd - && export GOT_HEAD="true"
+	echo "$HEAD"
+	if [[ $GOT_HEAD == "false" ]]; then
+		echo "Error: The given sha-commit is invalid."
+		echo "Usage: $0 -c [sha-commit] # set the head commit of the docker-stacks submodule (https://github.com/jupyter/docker-stacks/commits/master)."
+		echo "Exiting"
+		exit 2
+	else
+		echo "Set head to given commit."
+	fi
 fi
 
 # Write the contents into the DOCKERFILE and start with the header
@@ -186,7 +197,7 @@ echo "
 #################### Dependency: jupyter/base-image ########################
 ############################################################################
 " >>$DOCKERFILE
-cat $STACKS_DIR/base-notebook/Dockerfile | grep -v ROOT_CONTAINER >>$DOCKERFILE
+cat $STACKS_DIR/base-notebook/Dockerfile | grep -v 'ROOT_CONTAINER\|BASE_CONTAINER' >>$DOCKERFILE
 
 # copy files that are used during the build:
 cp $STACKS_DIR/base-notebook/jupyter_notebook_config.py .build/
