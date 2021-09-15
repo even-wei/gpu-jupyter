@@ -58,6 +58,14 @@ fi
 UBUNTU_20_04_HEAD_COMMIT="310edebfdcff1ed58444b88fc0f7c513751e30bd"
 UBUNTU_18_04_HEAD_COMMIT="3fe198a1fd4625d833654b1112cb15fade47c2c1"
 
+if [[ ! $TENSORFLOW ]] && [[ $tensorflow_notebook ]]; then
+  TENSORFLOW="2.6.0"
+fi
+
+if [[ ! $PYTORCH ]] && [[ $pytorch_notebook ]]; then
+  PYTORCH="1.9.0"
+fi
+
 ROOT_CONTAINER="ubuntu:focal"
 export HEAD_COMMIT=$UBUNTU_20_04_HEAD_COMMIT
 if [[ $GPU == 1 ]] || [[ $CUDA ]]; then
