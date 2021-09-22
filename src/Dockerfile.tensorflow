@@ -3,3 +3,8 @@ RUN pip install --no-cache-dir --quiet \
         tensorflow==${TENSORFLOW_VERSION} && \
         fix-permissions $CONDA_DIR && \
         fix-permissions /home/$NB_USER
+
+# Install tensorboard patch
+RN git clone https://github.com/InfuseAI/jupyter_tensorboard.git && \
+   cd jupyter_tensorboard && \
+   pip install .

@@ -33,10 +33,7 @@ while [[ $# -gt 0 ]]; do
     --base-notebook) base_notebook=1 ;;
     --tensorflow-notebook) tensorflow_notebook=1 ;;
     --pytorch-notebook) pytorch_notebook=1 ;;
-    --no-datascience-notebook) no_datascience_notebook=1 ;;
-    --python-only) no_datascience_notebook=1 ;;
-    --no-useful-packages) no_useful_packages=1 ;;
-    -s | --slim) no_datascience_notebook=1 && no_useful_packages=1 ;;
+    --zhfonts) zhfonts=1 ;;
     -h | --help) HELP=1 ;;
     *) echo "Unknown parameter passed: $1" && HELP=1 ;;
   esac
@@ -221,6 +218,15 @@ echo "
 ############################################################################
 " >>$DOCKERFILE
 cat src/Dockerfile.primehub >>$DOCKERFILE
+
+if [[ ! $zhfonts ]]; then
+  echo "
+############################################################################
+######################### Dependency: zh fonts #############################
+############################################################################
+" >>$DOCKERFILE
+  cat src/Dockerfile.zhfonts >>$DOCKERFILE
+fi
 
 if [[ ! $base_notebook ]]; then
   echo "
