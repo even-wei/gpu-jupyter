@@ -219,7 +219,7 @@ echo "
 " >>$DOCKERFILE
 cat src/Dockerfile.primehub >>$DOCKERFILE
 
-if [[ ! $zhfonts ]]; then
+if [[ $zhfonts ]]; then
   echo "
 ############################################################################
 ######################### Dependency: zh fonts #############################
