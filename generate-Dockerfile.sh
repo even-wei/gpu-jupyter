@@ -29,11 +29,12 @@ while [[ $# -gt 0 ]]; do
       PYTORCH="$2"
       shift
       ;;
-    --gpu) GPU=1 ;;
     --base-notebook) base_notebook=1 ;;
     --tensorflow-notebook) tensorflow_notebook=1 ;;
     --pytorch-notebook) pytorch_notebook=1 ;;
+    --gpu) GPU=1 ;;
     --zhfonts) zhfonts=1 ;;
+    --tensorboard) tensorboard=1 ;;
     -h | --help) HELP=1 ;;
     *) echo "Unknown parameter passed: $1" && HELP=1 ;;
   esac
@@ -246,12 +247,16 @@ if [[ ! $base_notebook ]]; then
   if [[ $TENSORFLOW ]]; then
     echo "ARG TENSORFLOW_VERSION=${TENSORFLOW}" >>$DOCKERFILE
     cat src/Dockerfile.tensorflow >>$DOCKERFILE
+    cat src/Dockerfile.tensorboard >>$DOCKERFILE
   fi
 
   if [[ $PYTORCH ]]; then
     echo "ARG PYTORCH_VERSION=${PYTORCH}" >>$DOCKERFILE
     echo "ARG CUDA=${CUDA}" >>$DOCKERFILE
     cat src/Dockerfile.pytorch >>$DOCKERFILE
+    if [[ $tensorboard ]]; then
+      cat src/Dockerfile.tensorboard >>$DOCKERFILE
+    fi
   fi
 fi
 
